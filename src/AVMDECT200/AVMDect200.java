@@ -1,5 +1,3 @@
-package AVMDECT200;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,6 +5,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.XML;
 
 public class AVMDect200 {
 	private String fritzbox_url = "fritz.box";
@@ -55,6 +58,24 @@ public class AVMDect200 {
 
 	private String getSocketPower(String devId) throws IOException {
 		return callCommand("getswitchpower", devId);
+	}
+	
+	private int getSocketTemperature(String devId) throws IOException {
+		try {
+			JSONArray sockets = xmlToJson(
+								callCommand("getdevicelistinfos", devId))
+								.getJSONObject("devicelist").
+								getJSONArray("device");
+
+		for (int i = 0; i < sockets.length(); i++) {
+			JSONObject s = sockets.getJSONObject(i);
+			if(s.getString("identifier").replace(" " , "").equals(devId))
+				return s.getJSONObject("temperature").getInt("celsius") + 
+						s.getJSONObject("temperature").getInt("offset");
+		}
+		} catch (JSONException e) {
+		}
+		return Integer.MIN_VALUE;
 	}
 
 	private String setSocketOn(String devId) throws IOException {
@@ -125,7 +146,22 @@ public class AVMDect200 {
 		}
 		return null;
 	}
-
+	
+	public static JSONObject xmlToJson(String callbackResponse) {
+		JSONObject xmlJSONObj = new JSONObject();
+		try {
+			xmlJSONObj = XML.toJSONObject(callbackResponse);
+		} catch (JSONException je) {
+			JSONObject err = new JSONObject();
+			try {
+				err.put("error", je.toString());
+			} catch (JSONException e) {
+			}
+			return err;
+		}
+		return xmlJSONObj;
+	}
+	
 	public class Socket {
 		public String name;
 		public String id;
@@ -145,10 +181,12 @@ public class AVMDect200 {
 			return this.name;
 		}
 
-		public double getSocketPower() throws NumberFormatException,
-				IOException {
-			double pwr = Double.parseDouble(jF.getSocketPower(this.id));
-			return pwr / 1000.0;
+		public int getSocketPower() {
+			try {
+				return Integer.parseInt(jF.getSocketPower(this.id));
+			} catch (NumberFormatException | IOException e) {
+				return Integer.MIN_VALUE;
+			}
 		}
 
 		public String setSocketOn() throws IOException {
@@ -170,7 +208,11 @@ public class AVMDect200 {
 		public boolean getSocketState() throws IOException {
 			return jF.getSocketState(this.id);
 		}
-
+		
+		public int getSocketTemperature() throws IOException, JSONException {
+			return jF.getSocketTemperature(this.id);
+		}
+		
 		public String toString() {
 			return this.id + ":" + this.name;
 		}
