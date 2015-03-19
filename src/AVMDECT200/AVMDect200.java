@@ -1,3 +1,4 @@
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -52,15 +53,24 @@ public class AVMDect200 {
 		return readURL(url);
 	}
 
-	private String getSocketName(String devId) throws IOException {
+	public String getSocketName(String devId) throws IOException {
 		return callCommand("getswitchname", devId);
 	}
-
-	private String getSocketPower(String devId) throws IOException {
-		return callCommand("getswitchpower", devId);
+	
+	public Boolean getSocketAvailability(String devId) throws IOException {
+		return !callCommand("getswitchpower", devId).equals("inval");
 	}
 	
-	private int getSocketTemperature(String devId) throws IOException {
+	public int getSocketPower(String devId) throws IOException {
+		
+		try {
+			return Integer.parseInt(callCommand("getswitchpower", devId));
+		} catch (NumberFormatException | IOException e) {
+			return Integer.MIN_VALUE;
+		}
+	}
+	
+	public int getSocketTemperature(String devId) throws IOException {
 		try {
 			JSONArray sockets = xmlToJson(
 								callCommand("getdevicelistinfos", devId))
@@ -78,15 +88,15 @@ public class AVMDect200 {
 		return Integer.MIN_VALUE;
 	}
 
-	private String setSocketOn(String devId) throws IOException {
+	public String setSocketOn(String devId) throws IOException {
 		return callCommand("setswitchon", devId);
 	}
 
-	private String setSocketOff(String devId) throws IOException {
+	public String setSocketOff(String devId) throws IOException {
 		return callCommand("setswitchoff", devId);
 	}
 
-	private boolean getSocketState(String devId) throws IOException {
+	public boolean getSocketState(String devId) throws IOException {
 		String ret = callCommand("getswitchstate", devId);
 		if (ret.equals("1"))
 			return true;
@@ -181,12 +191,8 @@ public class AVMDect200 {
 			return this.name;
 		}
 
-		public int getSocketPower() {
-			try {
-				return Integer.parseInt(jF.getSocketPower(this.id));
-			} catch (NumberFormatException | IOException e) {
-				return Integer.MIN_VALUE;
-			}
+		public int getSocketPower() throws IOException {
+			return jF.getSocketPower(this.id);
 		}
 
 		public String setSocketOn() throws IOException {
@@ -207,6 +213,10 @@ public class AVMDect200 {
 
 		public boolean getSocketState() throws IOException {
 			return jF.getSocketState(this.id);
+		}
+		
+		public Boolean getSocketAvailability() throws IOException {
+			return jF.getSocketAvailability(this.id);
 		}
 		
 		public int getSocketTemperature() throws IOException, JSONException {
