@@ -3,28 +3,28 @@
 # Example
 
 ```
-AVMDect200 fritzbox = new AVMDect200("my_fritzbox_password");
+AVMDect200 fritzbox = new AVMDect200("my_fritz_password", "fritz.box");
 fritzbox.init();
 ArrayList<AVMDect200.Socket> sockets = fritzbox.getSocketList();
-	
 for (AVMDect200.Socket socket : sockets) {
-	System.out.println(socket);
-	System.out.println(socket.getSocketPower() + "W");
+	System.out.println("Name: \t" + socket.getSocketName());
+	System.out.println("Id:   \t" + socket.getSocketId());
+	System.out.println("OK?:  \t" + socket.getSocketAvailability());
+	System.out.println("Watt: \t" + socket.getSocketPower()/1000.0 + "W");
 	if (socket.getSocketState())
-		System.out.println("Socket is ON");
+		System.out.println("State: \tON");
 	if (!socket.getSocketState())
-		System.out.println("Socket is OFF");
-}
-
-AVMDect200.Socket socket = sockets.get(0);
-socket.setSocketOn();
+		System.out.println("State: \tOFF");
+	System.out.println("Temp: \t" + socket.getSocketTemperature()/10.0 + "°C");
+	System.out.println();
+		}
 ```
 
 ```
-087610094277:Beleuchtung
-66.08W
-Socket is ON
-087610097318:Fernseher
-114.22W
-Socket is OFF
+Name: 	Wohnzimmer Steckdose
+Id:   	087610097318
+OK?:  	true
+Watt: 	4.0W
+State: 	ON
+Temp: 	22.8°C
 ```
